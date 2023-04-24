@@ -1,0 +1,2 @@
+Lista duplamente encadeada, pois é a estrutura que de forma dinamica resolve o problema e tem a melhor performance, foi necessário usar duplamente encadeada
+pois por se tratar de uma fila é necessário um ponteiro no final.

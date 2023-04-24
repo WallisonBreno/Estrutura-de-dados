@@ -1,0 +1,2 @@
+Lista encadeada, pois é a estrutura que de forma dinamica resolve o problema e tem a melhor performance, não foi necessário usar duplamente encadeada
+pois por se tratar de uma pilha não é necessário de um ponteiro no final.
