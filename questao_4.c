@@ -2,105 +2,117 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#define MAX_SIZE 100
+typedef struct node{
 
-// Definição da estrutura de pilha
-typedef struct {
-    int items[MAX_SIZE];
-    int top;
-} Stack;
+    int operand;
+    struct node * bottom;
+}Node;
 
-// Inicializa a pilha
-void initialize(Stack *s) {
-    s->top = -1;
+typedef struct stk{
+
+    Node * top;
+    int size;
+}Stack;
+
+Stack * initCalc(void){
+
+    Stack * auxStk = malloc(sizeof(Stack));
+    auxStk -> top = NULL;
+    auxStk -> size = 0;
+
+    return auxStk;
 }
 
-// Verifica se a pilha está vazia
-int isEmpty(Stack *s) {
-    return s->top == -1;
+void pushCalc(Stack * auxStk, int value){
+
+    Node * newNode = malloc(sizeof(Node));
+    newNode -> operand = value;
+    newNode -> bottom = NULL;
+
+    if (auxStk -> top == NULL){
+        auxStk -> top = newNode;
+    }else{
+
+        newNode -> bottom = auxStk -> top;
+        auxStk -> top = newNode;
+    }
+    auxStk -> size++;
 }
 
-// Verifica se a pilha está cheia
-int isFull(Stack *s) {
-    return s->top == MAX_SIZE - 1;
-}
+int popCalc(Stack * auxStk){
 
-// Insere um elemento na pilha
-void push(Stack *s, int item) {
-    if (isFull(s)) {
-        printf("Erro: pilha cheia\n");
-        exit(EXIT_FAILURE);
+    Node * garbage = auxStk -> top;
+    int value = 0;
+
+    if (auxStk -> top != NULL){
+
+        value = auxStk -> top -> operand;
+        auxStk -> top = auxStk -> top -> bottom;
     }
 
-    s->items[++s->top] = item;
+    free(garbage);
+    auxStk -> size--;
+    return value;
 }
 
-// Remove um elemento da pilha
-int pop(Stack *s) {
-    if (isEmpty(s)) {
-        // printf("Erro: pilha vazia\n");
-        // exit(EXIT_FAILURE);
+void printStkCalc(Stack * auxStk){
+
+    Node * auxPrint = auxStk -> top;
+
+    printf("Topo -> ");
+    while (auxPrint != NULL){
+
+        printf("%d ", auxPrint -> operand);
+        auxPrint = auxPrint -> bottom;
     }
-
-    return s->items[s->top--];
+    printf("<- Base\nTamanho: %d\n", auxStk -> size);
 }
 
-// Retorna o elemento no topo da pilha
-int peek(Stack *s) {
-    if (isEmpty(s)) {
-        // printf("Erro: pilha vazia\n");
-        // exit(EXIT_FAILURE);
-    }
 
-    return s->items[s->top];
-}
+int main(void){
 
-// Realiza a operação correspondente ao operador
-int performOperation(char operator, int operand1, int operand2) {
-    switch (operator) {
-        case '+': return operand1 + operand2;
-        case '-': return operand1 - operand2;
-        case '*': return operand1 * operand2;
-        case '/': return operand1 / operand2;
-        default: printf("Erro: operador inválido\n");
-                 exit(EXIT_FAILURE);
-    }
-}
+    Stack * operandStk = initCalc();
 
-int main() {
-    // Inicializa a pilha de operandos
-    Stack operandStack;
-    initialize(&operandStack);
+    char inputUser[20];
 
-    // Insere os elementos na pilha de operandos
-    push(&operandStack, '1');
-    push(&operandStack, '2');
-    push(&operandStack, '-');
-    push(&operandStack, '4');
-    push(&operandStack, '5');
-    push(&operandStack, '+');
-    push(&operandStack, '*');
+    printf("Adicione uma entrada: ");
+    fgets(inputUser, 20, stdin);
 
-    // Inicializa a pilha de operações
-    Stack operationStack;
-    initialize(&operationStack);
+    for (int i = 0; inputUser[i] != '\0'; i++){
 
-    // Processa a pilha de operandos
-    while (!isEmpty(&operandStack)) {
-        int item = pop(&operandStack);
+        if (isdigit(inputUser[i])){
 
-        if (isdigit(item)) {
-            // Se o item é um número, insere na pilha de operações
-            push(&operationStack, item - '0');
-        } else {
-            // Se o item é um operador, realiza a operação com os dois últimos operandos na pilha de operações
-            int operand2 = pop(&operationStack);
-            int operand1 = pop(&operationStack);
-            int result = performOperation(item, operand1, operand2);
-            push(&operationStack, result);
+            int operand = atoi(&inputUser[i]);
+            pushCalc(operandStk, operand);
+
+            while (isdigit(inputUser[i])){
+                i++;
+            }
+            i--;
+        }else if (isspace(inputUser[i])){
+            continue;
+        }else{
+
+            int operandOne = popCalc(operandStk), operandTwo = popCalc(operandStk);
+            int result;
+
+            switch (inputUser[i]){
+
+                case '+': result = operandTwo + operandOne; break;
+                case '-': result = operandTwo - operandOne; break;
+                case '*': result = operandTwo * operandOne; break;
+                case '/': result = operandTwo / operandOne; break;
+                
+                default: printf("Expressao que nao consta.\n"); exit(1);
+            }
+            pushCalc(operandStk, result);
         }
     }
 
-    // Imprime o resultado da operação
-    printf("Resultado: %d\n", peek(&operationStack));
+    int resultExpression = popCalc(operandStk);
+
+    if (operandStk -> top != NULL) { 
+        printf("Sentenca numerica nao formulada corretamente.\n");
+        exit(1);    
+    }else{ printf("RESULTADO = %d\n", resultExpression); exit(0); }
 }

@@ -1,125 +1,151 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct node{
+typedef struct node{//criação de nó padrão para implementar na estrutura
 
     int weight;
     struct node * bottom;
-}Hanoi;
+}Node;
 
-//int sizeA = 0, sizeB = 0, sizeC = 0;
+typedef struct stk{//estrutura designada para pilha, que recebe os nós
 
-Hanoi * topA = NULL;
-Hanoi * topB = NULL;
-Hanoi * topC = NULL;
+    Node * top;
+    int size;
+}Stack;
 
-void heapCargo (int cargo){//função para adicionar nova carga na pilha preferencialmente na pilha A
+Stack * initStack(void){//função de inicializar uma pilha, um constructor
 
-    if ((cargo >= 3 || cargo <= 7) && cargo != 4){
+    Stack * auxStk = malloc(sizeof(Stack));
+    auxStk -> top = NULL;
+    auxStk -> size = 0;
 
-        Hanoi * newCargo = malloc(sizeof(Hanoi));
-        newCargo -> weight = cargo;
-        newCargo -> bottom = NULL;
+    return auxStk;
+}
 
-        if (topA == NULL){//pilha A vazia, então pode adicionar sem problema com a carga
-            topA = newCargo;
-        }else{//pilha A já existe
+void push(Stack * auxStk, int value){//adiciona elementos à pilha
 
-            if (cargo == 7 && topA -> weight == cargo){
-                newCargo -> bottom = topA;
-                topA = newCargo;
-            }else if (cargo == 7){
+    Node * newNode = malloc(sizeof(Node));
+    newNode -> weight = value;
+    newNode -> bottom = NULL;
 
-                while (topA != NULL){
+    if (auxStk -> top == NULL){
+        auxStk -> top = newNode;
+    }else{
 
-                    if (topA -> weight == 5){
+        newNode -> bottom = auxStk -> top;
+        auxStk -> top = newNode;
+    }
+    auxStk -> size++;
+}
 
-                        Hanoi * auxStack = topA;
-                        topA = topA -> bottom;
-                        auxStack -> bottom = topB;
-                        topB = auxStack;
-                    }else{
+int pop(Stack * auxStk){//remove elementos existentes na pilha
 
-                        Hanoi * auxStack = topA;
-                        topA = topA -> bottom;
-                        auxStack -> bottom = topC;
-                        topC = auxStack;
-                    }
+    Node * garbage = auxStk -> top;
+    int value = 0;
 
-                    if (topA != NULL){
-                        if (topA -> weight == 7){break;}
-                    }
+    if (auxStk -> top != NULL){
+
+        value = auxStk -> top -> weight;
+        auxStk -> top = auxStk -> top -> bottom;
+    }
+
+    free(garbage);
+    auxStk -> size--;
+    return value;
+}
+
+void printStack(Stack * auxStk){
+
+    Node * auxPrint = auxStk -> top;
+
+    printf("\nTopo -> ");
+    while (auxPrint != NULL){
+
+        printf("%dt ", auxPrint -> weight);
+        auxPrint = auxPrint -> bottom;
+    }
+    printf("<- Base <=> Tamanho: %d\n", auxStk -> size);
+}
+
+int main(){
+
+    Stack * stackA = initStack();
+    Stack * stackB = initStack();
+    Stack * stackC = initStack();
+    int inputUser, cont = 1;
+
+    printf("Quantas cargas a adicionar: ");
+    scanf("%d", &inputUser);
+
+    do{
+        int cargo;
+        printf("Adicionar nova carga a pilha: ");
+        scanf("%d", &cargo);
+
+        if (cargo == 3 || cargo == 5 || cargo == 7){
+
+            if (stackA -> top == NULL){//pilha principal vazia
+                push(stackA, cargo);
+            }else{//há elementos em A
+
+                if (stackA -> top -> weight == 7){//Caso base
+                    push(stackA, cargo);
+                }else{//As condições possíveis
+
+                    if (cargo == 7){
+
+                            while (stackA -> size != 0 && stackA -> top -> weight != 7){
+
+                                if (stackA -> top -> weight == 5){
+
+                                    push(stackB, stackA -> top -> weight);
+                                    pop(stackA);
+                                }else{
+
+                                    push(stackC, stackA -> top -> weight);
+                                    pop(stackA);
+                                }
+                            }
+                        push(stackA, cargo);
+                    }else if (cargo == 5){
+
+                        while (stackA -> size != 0 && stackA -> top -> weight != 5 && stackA -> top -> weight != 7){
+
+                            push(stackC, stackA -> top -> weight);
+                            pop(stackA);
+                        }
+                        push(stackA, cargo);
+                    }else{ push(stackA, cargo); }
                 }
+            }
+        }else{ printf("Carga invalida para empilhamento.\n"); }
 
-                newCargo -> bottom = topA;
-                topA = newCargo;
-            }else if (cargo == 5){
+        cont++;
+    }while (cont <= inputUser);
 
-                while (topA != NULL){
+    while (stackB -> top != NULL){
 
-                    if (topA -> weight == 3){
+        if (stackA -> top -> weight == 3){
 
-                        Hanoi * auxStack = topA;
-                        topA = topA -> bottom;
-                        auxStack -> bottom = topC;
-                        topC = auxStack;
-                    }
+            while (stackA -> size != 0 && stackA -> top -> weight != 7){
 
-                    if (topA != NULL){
-                        if ((topA -> weight == 5 || topA -> weight == 7)){break;}
-                    }
-                }
-
-                newCargo -> bottom = topA;
-                topA = newCargo;
-            }else{
-
-                newCargo -> bottom = topA;
-                topA = newCargo;
+                push(stackC, stackA -> top -> weight);
+                pop(stackA);
             }
         }
-
-        while (topB != NULL){
-
-            Hanoi * auxSort = topB;
-            topB = topB -> bottom;
-            auxSort -> bottom = topA;
-            topA = auxSort;
-        }
-
-        while (topC != NULL){
-
-            Hanoi * auxSort = topC;
-            topC = topC -> bottom;
-            auxSort -> bottom = topA;
-            topA = auxSort;
-        }
-    }else{ printf("Carga inválida para ser adicionada na pilha.\n"); }
-}
-
-void printStack(void){
-
-    Hanoi * auxPrintA = topA;
-    Hanoi * auxPrintB = topB;
-    Hanoi * auxPrintC = topC;
-
-    while (auxPrintA != NULL){
-
-        printf("Carga: %dt\n", auxPrintA -> weight);
-        auxPrintA = auxPrintA -> bottom;
+        push(stackA, stackB -> top -> weight);
+        pop(stackB);
     }
-    if (auxPrintB == NULL && auxPrintC == NULL){
-        printf("Stacks B e C estao vazias.\n");
-    }else{ printf("Há algum elemento em B ou C.\n"); }
-}
 
-int main(void){
+    while (stackC -> top != NULL){
 
-    heapCargo(3);
-    heapCargo(7);
-    heapCargo(5);
+        push(stackA, stackC -> top -> weight);
+        pop(stackC);
+    }
 
-    printStack();
+    printStack(stackA);
+    printStack(stackB);
+    printStack(stackC);
 
     return 0;
 }
